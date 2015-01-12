@@ -1,0 +1,5 @@
+[package]
+
+name = "posix-ipc"
+version = "0.0.1"
+authors = ["Torrie Fischer <torrie@ripple.com>"]
