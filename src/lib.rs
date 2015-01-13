@@ -44,7 +44,7 @@ pub mod signals {
             }
         }
 
-        pub fn handle(self, handler: fn(Signal)) -> Result<(), usize> {
+        pub unsafe fn handle(self, handler: Box<FnMut(Signal)>) -> Result<(), usize> {
             match unsafe { signal (self as libc::c_int, mem::transmute(glue::rust_signal_handler)) } {
                 -1 => Result::Err(os::errno()),
                 _ => { glue::set_handler(self, handler); Result::Ok(()) }
@@ -58,22 +58,42 @@ pub mod signals {
         use super::Signal;
         use std::num::FromPrimitive;
         use self::alloc::arc::Arc;
+        use std::rc::Rc;
+        use std::mem;
+        use std::ptr;
 
-        static mut handlers: [fn(Signal); 15] = [
-            null_handler, null_handler, null_handler, null_handler, null_handler,
-            null_handler, null_handler, null_handler, null_handler, null_handler,
-            null_handler, null_handler, null_handler, null_handler, null_handler
+        #[derive(Copy,Show)]
+        struct FnPtr {
+            foo: usize,
+            bar: usize
+        }
+
+        static mut handlers: [FnPtr; 11] = [
+            FnPtr {foo: 0, bar: 0},
+            FnPtr {foo: 0, bar: 0},
+            FnPtr {foo: 0, bar: 0},
+            FnPtr {foo: 0, bar: 0},
+            FnPtr {foo: 0, bar: 0},
+            FnPtr {foo: 0, bar: 0},
+            FnPtr {foo: 0, bar: 0},
+            FnPtr {foo: 0, bar: 0},
+            FnPtr {foo: 0, bar: 0},
+            FnPtr {foo: 0, bar: 0},
+            FnPtr {foo: 0, bar: 0},
         ];
 
-        pub fn set_handler (sig: Signal, f: fn(Signal)) {
-            unsafe { handlers[sig as usize] = f }
+        pub unsafe fn set_handler (sig: Signal, f: Box<FnMut(Signal)>) {
+            handlers[sig as usize] = mem::transmute(f);
         }
 
         fn null_handler(s: Signal) {}
 
         pub unsafe extern "C" fn rust_signal_handler(sig: libc::c_int) {
-            let f = handlers[sig as usize];
-            f(FromPrimitive::from_i32(sig).expect("Unknown signal"));
+            let f: *mut FnMut(Signal) = mem::transmute(handlers[sig as usize]);
+            let p: FnPtr = mem::transmute(f);
+            if p.foo != 0 && p.bar != 0 {
+                (*f)(FromPrimitive::from_i32(sig).expect("unknown signal"));
+            }
         }
     }
 

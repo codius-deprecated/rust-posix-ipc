@@ -1,14 +1,29 @@
 extern crate "posix-ipc" as ipc;
 
-static mut caught: bool = false;
+use ipc::signals;
 
-fn catch_usr1(s: ipc::signals::Signal) {
-    unsafe { caught = true }
+#[test]
+fn raise_and_catch_with_closure() {
+    let mut caught = false;
+    {
+        let f = |&mut:Signal| {caught = true;println!("Caught!")};
+        unsafe {
+            signals::Signal::Usr1.handle(Box::new(f));
+        }
+    }
+    signals::Signal::Usr1.raise();
+    assert!(unsafe { caught });
 }
 
 #[test]
-fn raise_and_catch() {
-    ipc::signals::Signal::Usr1.handle(catch_usr1);
-    ipc::signals::Signal::Usr1.raise();
+fn raise_and_catch_with_func() {
+    static mut caught: bool = false;
+    {
+        fn f(s: signals::Signal) {unsafe { caught = true }}
+        unsafe {
+            signals::Signal::Usr1.handle(Box::new(f));
+        }
+    }
+    signals::Signal::Usr1.raise();
     assert!(unsafe { caught });
 }
