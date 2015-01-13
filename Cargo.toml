@@ -4,6 +4,6 @@ name = "posix-ipc"
 version = "0.0.1"
 authors = ["Torrie Fischer <torrie@ripple.com>"]
 description = "An API to POSIX IPC primitives"
-repository = "git://github.com/codius/rust-posix-ipc"
+repository = "http://github.com/codius/rust-posix-ipc"
 license = "MIT"
 readme = "README.md"
