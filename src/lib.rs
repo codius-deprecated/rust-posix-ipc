@@ -6,7 +6,8 @@ pub mod signals {
 
     #[derive(Hash, Eq, PartialEq, Copy, Show, FromPrimitive)]
     pub enum Signal {
-        Hup = 1,
+        None = 0,
+        Hup,
         Int,
         Quit,
         Ill,
@@ -68,7 +69,14 @@ pub mod signals {
             bar: usize
         }
 
-        static mut handlers: [FnPtr; 11] = [
+        static mut handlers: [FnPtr; 18] = [
+            FnPtr {foo: 0, bar: 0},
+            FnPtr {foo: 0, bar: 0},
+            FnPtr {foo: 0, bar: 0},
+            FnPtr {foo: 0, bar: 0},
+            FnPtr {foo: 0, bar: 0},
+            FnPtr {foo: 0, bar: 0},
+            FnPtr {foo: 0, bar: 0},
             FnPtr {foo: 0, bar: 0},
             FnPtr {foo: 0, bar: 0},
             FnPtr {foo: 0, bar: 0},
