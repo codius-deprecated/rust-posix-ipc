@@ -100,7 +100,10 @@ pub mod signals {
             let f: *mut FnMut(Signal) = mem::transmute(handlers[sig as usize]);
             let p: FnPtr = mem::transmute(f);
             if p.foo != 0 && p.bar != 0 {
-                (*f)(FromPrimitive::from_i32(sig).expect("unknown signal"));
+                match FromPrimitive::from_i32(sig) {
+                    Some(s) => (*f)(s),
+                    None => panic!("Unknown signal {}", sig)
+                }
             }
         }
     }
