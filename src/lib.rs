@@ -4,7 +4,7 @@ pub mod signals {
     use std::os;
     use std::mem;
 
-    #[derive(Hash, Eq, PartialEq, Copy, Show, FromPrimitive)]
+    #[derive(Hash, Eq, PartialEq, Copy, Debug, FromPrimitive)]
     pub enum Signal {
         None = 0,
         Hup,
@@ -63,7 +63,7 @@ pub mod signals {
         use std::mem;
         use std::ptr;
 
-        #[derive(Copy,Show)]
+        #[derive(Copy,Debug)]
         struct FnPtr {
             foo: usize,
             bar: usize

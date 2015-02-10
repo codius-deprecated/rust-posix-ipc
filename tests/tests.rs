@@ -6,7 +6,7 @@ use ipc::signals;
 fn raise_and_catch_with_closure() {
     let mut caught = false;
     {
-        let f = |&mut:Signal| {caught = true;println!("Caught!")};
+        let f = |Signal| {caught = true;println!("Caught!")};
         unsafe {
             signals::Signal::Usr1.handle(Box::new(f));
         }
