@@ -28,6 +28,16 @@ pub mod signals {
         Stop,
         Tstp,
         Ttin,
+        Ttou,
+        Urg,
+        XCpu,
+        Xfsz,
+        Vtalrm,
+        Prof,
+        Winch,
+        Io,
+        Pwr,
+        Sys
     }
 
     impl Signal {
