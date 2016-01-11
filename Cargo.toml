@@ -5,5 +5,5 @@ version = "0.0.2"
 authors = ["Torrie Fischer <torrie@ripple.com>"]
 description = "An API to POSIX IPC primitives"
 repository = "http://github.com/codius/rust-posix-ipc"
-license = "MIT"
+license = "MIT OR Apache-2.0"
 readme = "README.md"
