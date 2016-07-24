@@ -1,10 +1,14 @@
-#![feature(trace_macros)]
+#![feature(trace_macros,alloc)]
+#[macro_use] extern crate enum_primitive;
+extern crate num;
+
 pub mod signals {
     extern crate libc;
-    use std::os;
     use std::mem;
+    use std::io;
 
-    #[derive(Hash, Eq, PartialEq, Copy, Debug, FromPrimitive)]
+    enum_from_primitive! {
+    #[derive(Hash, Eq, PartialEq, Copy, Clone, Debug)]
     pub enum Signal {
         None = 0,
         Hup,
@@ -37,27 +41,28 @@ pub mod signals {
         Winch,
         Io,
         Pwr,
-        Sys
+        Sys,
+    }
     }
 
     impl Signal {
         pub fn raise(self) -> Result<(), usize> {
             match unsafe { raise(self as libc::c_int) } {
                 0 => Result::Ok(()),
-                _ => Result::Err(os::errno())
+                _ => Result::Err(io::Error::last_os_error().raw_os_error().unwrap_or(0) as usize)
             }
         }
 
         pub fn kill(self, pid: libc::pid_t) -> Result<(), usize> {
             match unsafe { kill(pid, self as libc::c_int) } {
                 0 => Result::Ok(()),
-                _ => Result::Err(os::errno())
+                _ => Result::Err(io::Error::last_os_error().raw_os_error().unwrap_or(0) as usize)
             }
         }
 
         pub unsafe fn handle(self, handler: Box<FnMut(Signal)>) -> Result<(), usize> {
-            match unsafe { signal (self as libc::c_int, mem::transmute(glue::rust_signal_handler)) } {
-                -1 => Result::Err(os::errno()),
+            match signal (self as libc::c_int, mem::transmute(glue::rust_signal_handler as *const libc::c_void)) {
+                -1 => Result::Err(io::Error::last_os_error().raw_os_error().unwrap_or(0) as usize),
                 _ => { glue::set_handler(self, handler); Result::Ok(()) }
             }
         }
@@ -67,13 +72,10 @@ pub mod signals {
         extern crate libc;
         extern crate alloc;
         use super::Signal;
-        use std::num::FromPrimitive;
-        use self::alloc::arc::Arc;
-        use std::rc::Rc;
         use std::mem;
-        use std::ptr;
+        use enum_primitive::FromPrimitive;
 
-        #[derive(Copy,Debug)]
+        #[derive(Copy, Clone, Debug)]
         struct FnPtr {
             foo: usize,
             bar: usize
@@ -104,13 +106,14 @@ pub mod signals {
             handlers[sig as usize] = mem::transmute(f);
         }
 
-        fn null_handler(s: Signal) {}
+        #[allow(dead_code)]
+        fn null_handler(_: Signal) {}
 
         pub unsafe extern "C" fn rust_signal_handler(sig: libc::c_int) {
             let f: *mut FnMut(Signal) = mem::transmute(handlers[sig as usize]);
             let p: FnPtr = mem::transmute(f);
             if p.foo != 0 && p.bar != 0 {
-                match FromPrimitive::from_i32(sig) {
+                match Signal::from_i32(sig) {
                     Some(s) => (*f)(s),
                     None => panic!("Unknown signal {}", sig)
                 }

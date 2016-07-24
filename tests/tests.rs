@@ -1,4 +1,4 @@
-extern crate "posix-ipc" as ipc;
+extern crate posix_ipc as ipc;
 
 use ipc::signals;
 
